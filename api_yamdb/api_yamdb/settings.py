@@ -25,7 +25,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'reviews.apps.ReviewsConfig',
-    'titles.apps.TitlesConfig',
+    #'titles.apps.TitlesConfig',
     'api.apps.ApiConfig',
     'api_yamdb',
 ]
