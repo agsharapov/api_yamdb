@@ -53,8 +53,8 @@ class Score(models.Model):
             MaxValueValidator(10)
         ],
         default=0)
-    #author= models.ForeignKey(
-     #   User, on_delete=models.CASCADE, related_name='scores')
+    author= models.ForeignKey(
+       User, on_delete=models.CASCADE, related_name='scores')
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='scores')
     voted_on = models.DateTimeField(auto_now=True)
@@ -64,8 +64,8 @@ class Score(models.Model):
 
 
 class Review(models.Model):
-    # author= models.ForeignKey(
-     #   User, on_delete=models.CASCADE, related_name='reviews')
+    author= models.ForeignKey(
+       User, on_delete=models.CASCADE, related_name='reviews')
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='reviews')
     text = models.TextField()
@@ -74,8 +74,8 @@ class Review(models.Model):
     score = models.ForeignKey(Score, on_delete=models.CASCADE, related_name='reviews')
 
 class Comment(models.Model):
-    # author= models.ForeignKey(
-     #   User, on_delete=models.CASCADE, related_name='comments')
+    author= models.ForeignKey(
+       User, on_delete=models.CASCADE, related_name='comments')
     review = models.ForeignKey(
         Review, on_delete=models.CASCADE, related_name='comments')
     text = models.TextField()
