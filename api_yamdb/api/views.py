@@ -2,9 +2,9 @@ from rest_framework import viewsets
 from titles.models import Category, Genre, Title
 from reviews.models import User, Score, Review, Comment
 from .serializers import (CategorySerializer, GenreSerializer, TitleSerializer,
-                          ScoreSerializer, ReviewSerializer, CommentSerializer,
+                           ReviewSerializer, CommentSerializer,
                           UserSerializer, AdminSerializer, SignupSerializer,
-                          TokenSerializer)
+                          TokenSerializer) # ScoreSerializer,
 from .permissions import AuthorOrReadOnly, Moderator, Admin, ReadOnly
 
 
