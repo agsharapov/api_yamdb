@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'reviews.apps.ReviewsConfig',
     'titles.apps.TitlesConfig',
     'api.apps.ApiConfig',
+    'api_yamdb',
 ]
 
 MIDDLEWARE = [
