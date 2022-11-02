@@ -2,7 +2,44 @@ from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
 from titles.models import Category, Genre, Title
-from reviews.models import Score, Review, Comment
+from reviews.models import User, Score, Review, Comment
+
+
+class UserSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(required=True)
+    email = serializers.CharField(required=True)
+    role = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = (
+            'username', 'email', 'role', 'bio', 'first_name', 'last_name',
+        )
+
+
+class AdminSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = (
+            'username', 'email', 'role', 'bio', 'first_name', 'last_name',
+        )
+
+
+class SignupSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('username', 'email',)
+
+
+class TokenSerializer(serializers.Serializer):
+    username = serializers.CharField(required=True)
+    confirmation_code = serializers.CharField(required=True)
+
+    class Meta:
+        model = User
+        fields = ('username', 'confirmation_code')
 
 
 class TitleSerializer(serializers.ModelSerializer):
