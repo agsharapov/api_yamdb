@@ -1,8 +1,7 @@
-from operator import mod
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import AbstractUser
-from titles.models import Title
+
 
 USER_ROLE_CHOICES = (
     ('user', 'Аутентифицированный пользователь'),
@@ -51,7 +50,7 @@ class Review(models.Model):
     author= models.ForeignKey(
      User, on_delete=models.CASCADE, related_name='reviews')
     title = models.ForeignKey(
-        Title, on_delete=models.CASCADE, related_name='reviews')
+        'Title', on_delete=models.CASCADE, related_name='reviews')
     text = models.TextField()
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True)
@@ -84,3 +83,46 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.text
+    
+class Genre(models.Model):
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True, max_length=50)
+
+    def __str__(self) -> str:
+        return self.slug
+
+
+class Category(models.Model):
+    name = models.CharField(max_length=256)
+    slug = models.SlugField(unique=True, max_length=50)
+
+    def __str__(self) -> str:
+        return self.slug
+
+
+class Title(models.Model):
+    name = models.TextField(max_length=64, blank=False)
+    year = models.IntegerField("Год выпуска")
+    # rating = models.ForeignKey()
+    description = models.CharField(max_length=256)
+    rating = models.IntegerField(
+        validators=[
+            MinValueValidator(0),
+            MaxValueValidator(5)
+        ],
+        default=5
+    )
+    genre = models.ForeignKey(
+        Genre,
+        null=False,
+        blank=False,
+        related_name='genres',
+        on_delete=models.CASCADE,
+    )
+    category = models.ForeignKey(
+        Category,
+        null=False,
+        blank=False,
+        related_name='cat',
+        on_delete=models.CASCADE,
+    )

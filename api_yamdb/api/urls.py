@@ -1,5 +1,11 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+# efimov - для тестов 
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+) # efimov - для тестов 
+
 
 from api.views import (TitleViewSet, GenreViewSet, CategoryViewSet,
                        ReviewViewSet, CommentViewSet, UserViewSet)
@@ -25,5 +31,7 @@ router.register(
 router.register('users', UserViewSet, basename='users')
 
 urlpatterns = [
-    path('v1/', include(router.urls), name='api'),
+    path('', include(router.urls), name='api'),
+    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'), # efimov - для тестов 
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'), # efimov - для тестов 
 ]
