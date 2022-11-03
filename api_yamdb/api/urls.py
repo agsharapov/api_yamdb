@@ -17,13 +17,13 @@ router.register(
 )
 
 router.register(
-    r'reviews', ReviewViewSet, basename='reviews'
+    r'titles/(?P<title_id>\d+)/reviews', ReviewViewSet, basename='reviews'
 )
 router.register(
-    r'comments', CommentViewSet, basename='comments'
+    r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments', CommentViewSet, basename='comments'
 )
 router.register('users', UserViewSet, basename='users')
 
 urlpatterns = [
-    path('', include(router.urls), name='api'),
+    path('v1/', include(router.urls), name='api'),
 ]
