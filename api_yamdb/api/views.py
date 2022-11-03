@@ -2,7 +2,7 @@ from rest_framework import viewsets, filters
 from rest_framework.pagination import LimitOffsetPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from reviews.models import Category, Genre, Title
-from reviews.models import User, Score, Review, Comment
+from reviews.models import User, Review, Comment
 from .serializers import (CategorySerializer, GenreSerializer, TitleSerializer,
                            ReviewSerializer, CommentSerializer,
                           UserSerializer, AdminSerializer, SignupSerializer,
@@ -70,8 +70,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = (AuthorOrReadOnly,)
-
+  
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
         title = get_object_or_404(Title, pk=title_id)
@@ -82,11 +81,15 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title = get_object_or_404(Title, pk=title_id)
         serializer.save(title=title, author=self.request.user)
 
+    def get_permissions(self):
+        if self.action == 'partial_update' or self.action == 'update' or self.action == 'destroy':
+            return (AuthorOrReadOnly(), Moderator(), Admin(),)
+        return super().get_permissions()
+
 
 class CommentViewSet(viewsets.ModelViewSet):
    
     serializer_class = CommentSerializer
-    permission_classes = (AuthorOrReadOnly,)
 
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
@@ -102,6 +105,10 @@ class CommentViewSet(viewsets.ModelViewSet):
         review = get_object_or_404(Review, pk=review_id)
         serializer.save(title=title, review=review, author=self.request.user)
 
+    def get_permissions(self):
+        if self.action == 'partial_update' or self.action == 'update' or self.action == 'destroy':
+            return (AuthorOrReadOnly(), Moderator(), Admin(),)
+        return super().get_permissions()
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
