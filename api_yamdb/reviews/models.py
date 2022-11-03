@@ -83,7 +83,7 @@ class Comment(models.Model):
         'Дата добавления', auto_now_add=True, db_index=True)
     
 class Genre(models.Model):
-    g_name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, max_length=50)
 
     def __str__(self) -> str:
@@ -91,7 +91,7 @@ class Genre(models.Model):
 
 
 class Category(models.Model):
-    c_name = models.CharField(max_length=256)
+    name = models.CharField(max_length=256)
     slug = models.SlugField(unique=True, max_length=50)
 
     def __str__(self) -> str:
@@ -99,7 +99,7 @@ class Category(models.Model):
 
 
 class Title(models.Model):
-    name = models.TextField(max_length=64)
+    name = models.TextField(max_length=64, blank=False)
     year = models.IntegerField("Год выпуска")
     # rating = models.ForeignKey()
     description = models.CharField(max_length=256)
