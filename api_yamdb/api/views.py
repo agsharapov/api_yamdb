@@ -1,6 +1,6 @@
 from rest_framework import viewsets
 from titles.models import Category, Genre, Title
-from reviews.models import User, Score, Review, Comment
+from reviews.models import User, Review, Comment
 from .serializers import (CategorySerializer, GenreSerializer, TitleSerializer,
                          ReviewSerializer, CommentSerializer,
                           UserSerializer, AdminSerializer, SignupSerializer,
