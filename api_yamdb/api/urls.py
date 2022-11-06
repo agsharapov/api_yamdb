@@ -4,6 +4,9 @@ from api.views import (TitleViewSet, GenreViewSet, CategoryViewSet,
                        ReviewViewSet, CommentViewSet, UserViewSet,
                        signup, get_token)
 
+
+from rest_framework_simplejwt.views import TokenObtainPairView
+
 router = DefaultRouter()
 router.register('users', UserViewSet, basename='users')
 router.register(
@@ -27,4 +30,5 @@ urlpatterns = [
     path('', include(router.urls), name='api'),
     path('auth/signup/', signup, name='signup'),
     path('auth/token/', get_token, name='login'),
+    path('api/123/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
 ]

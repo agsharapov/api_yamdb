@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
-from reviews.models import Category, Genre, Title
+from reviews.models import Category, Genre, Title, TitleGenre
 from reviews.models import User, Review, Comment
 from django.shortcuts import get_object_or_404
 
@@ -63,21 +63,6 @@ class TokenSerializer(serializers.Serializer):
         fields = ('username', 'confirmation_code')
 
 
-class TitleSerializer(serializers.ModelSerializer):
-    genre = serializers.SlugRelatedField(
-        many=True,
-        slug_field='slug',
-        queryset=Genre.objects.all())  # serializers.PrimaryKeyRelatedField #SlugRelatedField
-    category = serializers.SlugRelatedField(
-        many=True,
-        slug_field='slug',
-        queryset=Category.objects.all())  # serializers.PrimaryKeyRelatedField
-
-    class Meta:
-        fields = ('name', 'year', 'genre', 'category', 'description')
-        model = Title
-
-
 class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -92,13 +77,59 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
 
 
+class GetTitleSerializer(serializers.ModelSerializer):
+    genre = GenreSerializer(many=True, required=False)
+    category = CategorySerializer(many=False, required=False)
+
+    class Meta:
+        fields = ('id', 'name', 'year', 'genre', 'category', 'description')
+        model = Title
+
+
+class TitleSerializer(serializers.ModelSerializer):
+    genre = GenreSerializer(many=True, required=False)
+    category = CategorySerializer(many=False, required=False)
+
+    class Meta:
+        fields = ('id', 'name', 'year', 'genre', 'category', 'description')
+        model = Title
+
+    def create(self, validated_data):
+        self.initial_data._mutable = True
+        genres = self.initial_data.pop('genre')
+        cats = self.initial_data.pop('category')[0]
+        self.initial_data._mutable = False
+        title = Title.objects.create(**validated_data)
+        for genre in genres:
+            current_genre = Genre.objects.get_or_create(slug=genre)[0]
+            TitleGenre.objects.create(
+                genre=current_genre, title=title)
+        current_category = Category.objects.get_or_create(slug=cats)[0]
+        title.category = current_category
+        title.save()
+        return title
+
+    def update(self, instance, validated_data):
+        self.initial_data._mutable = True
+        if 'name' in self.initial_data:
+            name = self.initial_data.pop('name')[0]
+            self.instance.name = name
+        if 'category' in self.initial_data:
+            cats = self.initial_data.pop('category')[0]
+            current_category = Category.objects.get_or_create(slug=cats)[0]
+            self.instance.category = current_category
+        self.initial_data._mutable = False
+        self.instance.save()
+        return self.instance
+
+
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username'
     )
 
     class Meta:
-        fields = '__all__'
+        fields = ('author', 'title', 'text', 'pub_date', 'score')
         model = Review
         validators = [
             UniqueTogetherValidator(
@@ -132,5 +163,5 @@ class CommentSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = '__all__'
+        fields = ('author', 'review', 'text', 'pub_date')
         model = Comment
