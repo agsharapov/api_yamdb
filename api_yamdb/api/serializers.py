@@ -129,14 +129,9 @@ class ReviewSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ('author', 'title', 'text', 'pub_date', 'score')
+        fields = '__all__'
         model = Review
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Review.objects.all(),
-                fields=('author', 'title')
-            )
-        ]
+        read_only_fields = ('title',)
 
     def validate_score(self, value):
         if not (0 < value <= 10):
@@ -146,7 +141,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
-        title_id = self.kwargs.get('title_id')
+        title_id = self.context['view'].kwargs.get('title_id')
         author = self.context.get('request').user
         title = get_object_or_404(Title, pk=title_id)
         if (title.reviews.filter(author=author).exists()
@@ -163,5 +158,6 @@ class CommentSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ('author', 'review', 'text', 'pub_date')
+        fields = '__all__'
         model = Comment
+        read_only_fields = ('review',)

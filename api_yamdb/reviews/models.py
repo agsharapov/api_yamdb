@@ -46,22 +46,6 @@ class User(AbstractUser):
         return self.role == 'admin'
 
 
-class Score(models.Model):
-    value = models.SmallIntegerField(validators=[
-        MinValueValidator(0),
-        MaxValueValidator(10)
-    ],
-        default=0)
-    author = models.ForeignKey(User, on_delete=models.CASCADE,
-                               related_name='scores')
-    title = models.ForeignKey('Title', on_delete=models.CASCADE,
-                              related_name='scores')
-    voted_on = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        unique_together = ('author', 'title')
-
-
 class Review(models.Model):
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='reviews')
@@ -70,8 +54,21 @@ class Review(models.Model):
     text = models.TextField()
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True)
-    score = models.ForeignKey(Score, on_delete=models.CASCADE,
-                              related_name='reviews')
+    score = models.SmallIntegerField(
+        verbose_name="Оценка",
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+    )
+
+    class Meta:
+        ordering = ["-pub_date"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["author", "title"], name="unique_review"
+            )
+        ]
+
+    def __str__(self):
+        return self.text[:15]
 
 
 class Comment(models.Model):
