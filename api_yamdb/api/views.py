@@ -15,7 +15,7 @@ from reviews.models import (Category, Genre, Title,
                             User, Review)
 from .serializers import (CategorySerializer, GenreSerializer, TitleSerializer,
                           ReviewSerializer, CommentSerializer, UserSerializer,
-                          AdminSerializer, SignupSerializer, TokenSerializer)
+                          ProfileSerializer, SignupSerializer, TokenSerializer)
 from .filters import TitleFilter
 from .permissions import AuthorOrReadOnly, Moderator, Admin, ReadOnly
 
@@ -115,7 +115,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
         serializer.save(title=title, author=self.request.user)
 
     def get_permissions(self):
-        if self.action == 'partial_update' or self.action == 'update' or self.action == 'destroy':
+        if (
+            self.action == 'partial_update'
+            or self.action == 'update'
+            or self.action == 'destroy'
+        ):
             return (AuthorOrReadOnly(), Moderator(), Admin(),)
         if self.action == 'retrieve' or self.action == 'list':
             return (ReadOnly(),)
@@ -139,19 +143,38 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer.save(review=review, author=self.request.user)
 
     def get_permissions(self):
-        if self.action == 'partial_update' or self.action == 'update' or self.action == 'destroy':
+        if (
+            self.action == 'partial_update'
+            or self.action == 'update'
+            or self.action == 'destroy'
+        ):
             return (AuthorOrReadOnly(), Moderator(), Admin(),)
-        if self.action == 'retrieve' or self.action == 'list':
-            return (ReadOnly(),)
         return super().get_permissions()
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    serializer_class = AdminSerializer
+    serializer_class = ProfileSerializer
     permission_classes = (Admin,)
+    pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     lookup_field = 'username'
+    search_fields = ('username',)
+
+    @action(
+        detail=False, methods=['get', 'patch'],
+        url_path='me', permission_classes=(IsAuthenticated,)
+    )
+    def me(self, request):
+        serializer = UserSerializer(request.user)
+        if request.method == 'PATCH':
+            serializer = UserSerializer(
+                request.user, data=request.data, partial=True
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 def send_confirmation_code(user):
@@ -182,29 +205,14 @@ def get_token(request):
     serializer = TokenSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     username = serializer.data['username']
     user = get_object_or_404(User, username=username)
     confirmation_code = serializer.data['confirmation_code']
     if not default_token_generator.check_token(user, confirmation_code):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     token = RefreshToken.for_user(user)
     return Response(
         {'token': str(token.access_token)}, status=status.HTTP_200_OK
     )
-
-
-@action(
-    detail=False, methods=['GET', 'PATCH'],
-    url_path='me', url_name='me',
-    permission_classes=(IsAuthenticated,)
-)
-def user_profile(self, request):
-    serializer = UserSerializer(request.user)
-    if request.method == 'PATCH':
-        serializer = UserSerializer(
-            request.user, data=request.data, partial=True
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    return Response(serializer.data, status=status.HTTP_200_OK)

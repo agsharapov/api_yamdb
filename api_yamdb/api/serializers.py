@@ -1,7 +1,6 @@
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
-from reviews.models import Category, Genre, Title, TitleGenre
-from reviews.models import User, Review, Comment
+from reviews.models import (Category, Genre, Title, TitleGenre,
+                            User, Review, Comment)
 from django.shortcuts import get_object_or_404
 
 
@@ -12,31 +11,23 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = (
-            'username', 'email', 'role', 'bio', 'first_name', 'last_name',
-        )
+        fields = 'username', 'email', 'role', 'bio', 'first_name', 'last_name'
 
     def validate_username(self, value):
         if value == 'me':
-            raise serializers.ValidationError(
-                'Имя «me» нельзя использовать.'
-            )
+            raise serializers.ValidationError('Имя «me» нельзя использовать.')
         return value
 
 
-class AdminSerializer(serializers.ModelSerializer):
+class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = (
-            'username', 'email', 'role', 'bio', 'first_name', 'last_name',
-        )
+        fields = 'username', 'email', 'role', 'bio', 'first_name', 'last_name'
 
     def validate_username(self, value):
         if value == 'me':
-            raise serializers.ValidationError(
-                'Имя «me» нельзя использовать.'
-            )
+            raise serializers.ValidationError('Имя «me» нельзя использовать.')
         return value
 
 
@@ -44,13 +35,11 @@ class SignupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'email',)
+        fields = 'username', 'email'
 
     def validate_username(self, value):
         if value == 'me':
-            raise serializers.ValidationError(
-                'Имя «me» нельзя использовать.'
-            )
+            raise serializers.ValidationError('Имя «me» нельзя использовать.')
         return value
 
 
@@ -60,20 +49,20 @@ class TokenSerializer(serializers.Serializer):
 
     class Meta:
         model = User
-        fields = ('username', 'confirmation_code')
+        fields = 'username', 'confirmation_code'
 
 
 class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = ('name', 'slug',)
+        fields = 'name', 'slug'
         model = Genre
 
 
 class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = ('name', 'slug',)
+        fields = 'name', 'slug'
         model = Category
 
 
@@ -82,7 +71,7 @@ class GetTitleSerializer(serializers.ModelSerializer):
     category = CategorySerializer(many=False, required=False)
 
     class Meta:
-        fields = ('id', 'name', 'year', 'genre', 'category', 'description')
+        fields = 'id', 'name', 'year', 'genre', 'category', 'description'
         model = Title
 
 
@@ -91,7 +80,7 @@ class TitleSerializer(serializers.ModelSerializer):
     category = CategorySerializer(many=False, required=False)
 
     class Meta:
-        fields = ('id', 'name', 'year', 'genre', 'category', 'description')
+        fields = 'id', 'name', 'year', 'genre', 'category', 'description'
         model = Title
 
     def create(self, validated_data):
