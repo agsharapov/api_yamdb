@@ -17,7 +17,7 @@ from .serializers import (CategorySerializer, GenreSerializer, TitleSerializer,
                           ReviewSerializer, CommentSerializer, UserSerializer,
                           ProfileSerializer, SignupSerializer, TokenSerializer)
 from .filters import TitleFilter
-from .permissions import AuthorOrReadOnly, Moderator, Admin, ReadOnly
+from .permissions import AuthorOrReadOnly, Moderator, Admin, ReadOnly, AuthorOrModeratorOrAdminOrReadOnly
 
 
 ADMIN_EMAIL = 'robot@yamdb-team.ru'
@@ -102,6 +102,7 @@ class CategoryViewSet(
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
+    permission_classes = (AuthorOrModeratorOrAdminOrReadOnly, )
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
@@ -114,42 +115,21 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title = get_object_or_404(Title, pk=title_id)
         serializer.save(title=title, author=self.request.user)
 
-    def get_permissions(self):
-        if (
-            self.action == 'partial_update'
-            or self.action == 'update'
-            or self.action == 'destroy'
-        ):
-            return (AuthorOrReadOnly(), Moderator(), Admin(),)
-        if self.action == 'retrieve' or self.action == 'list':
-            return (ReadOnly(),)
-        return super().get_permissions()
-
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
+    permission_classes = (AuthorOrModeratorOrAdminOrReadOnly, )
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
-
         review_id = self.kwargs.get('review_id')
         review = get_object_or_404(Review, pk=review_id)
         return review.comments.all()
 
     def perform_create(self, serializer):
-
         review_id = self.kwargs.get('review_id')
         review = get_object_or_404(Review, pk=review_id)
         serializer.save(review=review, author=self.request.user)
-
-    def get_permissions(self):
-        if (
-            self.action == 'partial_update'
-            or self.action == 'update'
-            or self.action == 'destroy'
-        ):
-            return (AuthorOrReadOnly(), Moderator(), Admin(),)
-        return super().get_permissions()
 
 
 class UserViewSet(viewsets.ModelViewSet):
