@@ -4,6 +4,7 @@ from api.views import (TitleViewSet, GenreViewSet, CategoryViewSet,
                        ReviewViewSet, CommentViewSet, UserViewSet,
                        signup, get_token)
 
+
 router = DefaultRouter()
 router.register('users', UserViewSet, basename='users')
 router.register(r'titles', TitleViewSet, basename='titles')
@@ -23,5 +24,5 @@ router.register(
 urlpatterns = [
     path('', include(router.urls), name='api'),
     path('auth/signup/', signup, name='signup'),
-    path('auth/token/', get_token, name='login')
+    path('auth/token/', get_token, name='login'),
 ]

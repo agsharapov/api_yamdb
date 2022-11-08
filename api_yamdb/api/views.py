@@ -25,6 +25,7 @@ ADMIN_EMAIL = 'robot@yamdb-team.ru'
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.all().select_related('category')
     serializer_class = TitleSerializer
     pagination_class = LimitOffsetPagination
     permission_classes = (Admin,)
@@ -33,14 +34,14 @@ class TitleViewSet(viewsets.ModelViewSet):
     search_fields = ('genre', 'genre__slug', 'category__slug',)
     filterset_class = TitleFilter
 
-    def get_queryset(self):
-        if 'genre' in self.request.query_params:
-            gen = self.request.query_params.get('genre')
-            qs = Title.objects.all().prefetch_related(
-                Prefetch('genre', queryset=Genre.objects.filter(slug=gen))
-            )
-        qs = Title.objects.all().select_related('category')
-        return qs
+    # def get_queryset(self):
+    #     if 'genre' in self.request.query_params:
+    #         gen = self.request.query_params.get('genre')
+    #         qs = Title.objects.all().prefetch_related(
+    #             Prefetch('genre', queryset=Genre.objects.filter(slug=gen))
+    #         )
+    #     qs = Title.objects.all().select_related('category')
+    #     return qs
 
     def get_permissions(self):
         if self.action == 'retrieve':

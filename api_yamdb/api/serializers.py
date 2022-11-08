@@ -78,9 +78,12 @@ class GetTitleSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(many=True, required=False)
     category = CategorySerializer(many=False, required=False)
+    rating = serializers.SerializerMethodField()
 
     class Meta:
-        fields = 'id', 'name', 'year', 'genre', 'category', 'description'
+        fields = (
+            'id', 'name', 'year', 'genre', 'category', 'description', 'rating'
+        )
         model = Title
 
     def create(self, validated_data):
@@ -111,6 +114,16 @@ class TitleSerializer(serializers.ModelSerializer):
         self.instance.save()
         return self.instance
 
+    def get_rating(self, obj):
+        rate = Review.objects.filter(
+            title_id=obj.id
+        ).values_list('score', flat=True)
+        if len(rate) == 0:
+            rating = None
+        else:
+            rating = sum(rate) / len(rate)
+        return rating
+
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
@@ -118,7 +131,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = '__all__'
+        fields = 'id', 'score', 'text', 'author', 'pub_date'
         model = Review
         read_only_fields = ('title',)
 

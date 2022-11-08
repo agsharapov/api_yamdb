@@ -98,34 +98,26 @@ class Category(models.Model):
 
 
 class TitleGenre(models.Model):
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
     title = models.ForeignKey(
         'Title', on_delete=models.CASCADE, related_name='titles'
     )
-    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
 
     def __str__(self):
         return f'{self.title} {self.genre}'
 
 
-class TitleCategory(models.Model):
-    title = models.ForeignKey('Title', on_delete=models.CASCADE)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return f'{self.title} {self.category}'
-
-
 class Title(models.Model):
     name = models.TextField(max_length=64, blank=False)
     year = models.IntegerField("Год выпуска")
-    # rating = models.ForeignKey()
     description = models.CharField(max_length=256)
     rating = models.IntegerField(
         validators=[
             MinValueValidator(0),
             MaxValueValidator(10)
         ],
-        default=5
+        null=True,
+        blank=True,
     )
     genre = models.ManyToManyField(
         Genre, through=TitleGenre, related_name='genre'
