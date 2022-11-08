@@ -16,8 +16,7 @@ from .serializers import (CategorySerializer, GenreSerializer, TitleSerializer,
                           ReviewSerializer, CommentSerializer, UserSerializer,
                           ProfileSerializer, SignupSerializer, TokenSerializer)
 from .filters import TitleFilter
-from .permissions import (AuthorOrReadOnly, Moderator, Admin,
-                          ReadOnly, AuthorOrModeratorOrAdminOrReadOnly)
+from .permissions import Admin, ReadOnly, AuthorOrModeratorOrAdminOrReadOnly
 
 
 ADMIN_EMAIL = 'robot@yamdb-team.ru'
