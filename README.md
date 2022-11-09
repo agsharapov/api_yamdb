@@ -148,4 +148,21 @@ python manage.py runserver
 "pub_date": "2019-08-24T14:15:22Z"
 }`
 
+# Используемые технологии:
+
+[Python 3.7.9](https://www.python.org/)
+
+[Django 2.2.16](https://www.djangoproject.com/)
+
+[Django REST Framework 3.12.4](https://www.django-rest-framework.org/)
+
+[Simple JWT 5.2.2](https://github.com/jazzband/djangorestframework-simplejwt)
+
+# Об авторах:
+
+* Шарапов Александр (agsharapov) — управление пользователями,
+
+* Ефимов Дмитрий (DmitryTakoy) — модели, view-функции, эндпоинты,
+
+* Шурыгина Юлия (YuliaShurygina) — отзывы, комментарии, рейтинг.
 
