@@ -11,7 +11,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = 'username', 'email', 'role', 'bio', 'first_name', 'last_name'
+        fields = (
+            'username', 'email', 'role', 'bio', 'first_name', 'last_name'
+        )
 
     def validate_username(self, value):
         if value == 'me':
@@ -23,7 +25,9 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = 'username', 'email', 'role', 'bio', 'first_name', 'last_name'
+        fields = (
+            'username', 'email', 'role', 'bio', 'first_name', 'last_name'
+        )
 
     def validate_username(self, value):
         if value == 'me':
@@ -35,7 +39,7 @@ class SignupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = 'username', 'email'
+        fields = ('username', 'email')
 
     def validate_username(self, value):
         if value == 'me':
@@ -49,20 +53,20 @@ class TokenSerializer(serializers.Serializer):
 
     class Meta:
         model = User
-        fields = 'username', 'confirmation_code'
+        fields = ('username', 'confirmation_code')
 
 
 class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = 'name', 'slug'
+        fields = ('name', 'slug')
         model = Genre
 
 
 class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = 'name', 'slug'
+        fields = ('name', 'slug')
         model = Category
 
 
@@ -71,7 +75,7 @@ class GetTitleSerializer(serializers.ModelSerializer):
     category = CategorySerializer(many=False, required=False)
 
     class Meta:
-        fields = 'id', 'name', 'year', 'genre', 'category', 'description'
+        fields = ('id', 'name', 'year', 'genre', 'category', 'description')
         model = Title
 
 
@@ -131,7 +135,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = 'id', 'score', 'text', 'author', 'pub_date'
+        fields = ('id', 'score', 'text', 'author', 'pub_date')
         model = Review
         read_only_fields = ('title',)
 
@@ -160,6 +164,6 @@ class CommentSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'author', 'review', 'text', 'pub_date')
         model = Comment
         read_only_fields = ('review',)

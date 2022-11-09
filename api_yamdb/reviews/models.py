@@ -3,11 +3,14 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import AbstractUser
 
 
-USER_ROLE_CHOICES = (
-    ('user', 'Аутентифицированный пользователь'),
-    ('moderator', 'Модератор'),
-    ('admin', 'Администратор'),
-)
+USER = 'user'
+MODERATOR = 'moderator'
+ADMIN = 'admin'
+USER_ROLE_CHOICES = [
+    ('user', USER),
+    ('moderator', MODERATOR),
+    ('admin', ADMIN)
+]
 
 
 class User(AbstractUser):
@@ -18,7 +21,7 @@ class User(AbstractUser):
     role = models.CharField(
         max_length=255,
         choices=USER_ROLE_CHOICES,
-        default='user',
+        default=USER,
         verbose_name='Роль'
     )
     bio = models.TextField(
@@ -35,15 +38,15 @@ class User(AbstractUser):
 
     @property
     def is_user(self):
-        return self.role == 'user'
+        return self.role == USER
 
     @property
     def is_moderator(self):
-        return self.role == 'moderator'
+        return self.role == MODERATOR
 
     @property
     def is_admin(self):
-        return self.role == 'admin'
+        return self.role == ADMIN
 
 
 class Review(models.Model):
@@ -111,7 +114,7 @@ class Title(models.Model):
     name = models.TextField(max_length=64, blank=False)
     year = models.IntegerField("Год выпуска")
     description = models.CharField(max_length=256)
-    rating = models.IntegerField(
+    rating = models.PositiveIntegerField(
         validators=[
             MinValueValidator(0),
             MaxValueValidator(10)
