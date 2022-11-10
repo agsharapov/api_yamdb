@@ -19,6 +19,7 @@ from .serializers import (CategorySerializer, GenreSerializer, UserSerializer,
                           ConfirmationCodeSerializer, GetTitleSerializer)
 from .filters import TitleFilter
 from .permissions import Admin, ReadOnly, AuthorOrModeratorOrAdminOrReadOnly
+from .viewsets import CustomViewSet
 
 
 ADMIN_EMAIL = 'robot@yamdb-team.ru'
@@ -41,7 +42,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         return GetTitleSerializer
 
 
-class GenreViewSet(viewsets.CustomViewSet):
+class GenreViewSet(CustomViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = (Admin,)
@@ -59,7 +60,7 @@ class GenreViewSet(viewsets.CustomViewSet):
         return super().get_permissions()
 
 
-class CategoryViewSet(viewsets.CustomViewSet):
+class CategoryViewSet(CustomViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (Admin,)

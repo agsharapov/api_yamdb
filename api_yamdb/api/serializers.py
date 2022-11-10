@@ -4,7 +4,6 @@ from reviews.models import (Category, Genre, Title,
 from django.shortcuts import get_object_or_404
 
 
-
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(required=True)
     email = serializers.CharField(required=True)

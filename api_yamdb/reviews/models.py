@@ -5,7 +5,6 @@ from django.core.validators import RegexValidator
 from datetime import datetime
 
 
-
 USER = 'user'
 MODERATOR = 'moderator'
 ADMIN = 'admin'
@@ -19,7 +18,6 @@ ALPHANUMERIC = RegexValidator(
     r'^[0-9a-zA-Z]*$', 'Допустимы только буквы или цифры.'
 )
 REVIEW_TEXT_LENGTH = 15
-
 
 
 class User(AbstractUser):
