@@ -8,6 +8,7 @@ USER_ROLE_CHOICES = (
     ('moderator', 'Модератор'),
     ('admin', 'Администратор'),
 )
+REVIEW_TEXT_LENGTH = 15
 
 
 class User(AbstractUser):
@@ -68,7 +69,7 @@ class Review(models.Model):
         ]
 
     def __str__(self):
-        return self.text[:15]
+        return self.text[:REVIEW_TEXT_LENGTH]
 
 
 class Comment(models.Model):
