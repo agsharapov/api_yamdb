@@ -1,12 +1,20 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import RegexValidator
+from datetime import datetime
 
 
-USER_ROLE_CHOICES = (
-    ('user', 'Аутентифицированный пользователь'),
-    ('moderator', 'Модератор'),
-    ('admin', 'Администратор'),
+USER = 'user'
+MODERATOR = 'moderator'
+ADMIN = 'admin'
+USER_ROLE_CHOICES = [
+    ('user', USER),
+    ('moderator', MODERATOR),
+    ('admin', ADMIN)
+]
+ALPHANUMERIC = RegexValidator(
+    r'^[0-9a-zA-Z]*$', 'Допустимы только буквы или цифры.'
 )
 
 
@@ -18,7 +26,7 @@ class User(AbstractUser):
     role = models.CharField(
         max_length=255,
         choices=USER_ROLE_CHOICES,
-        default='user',
+        default=USER,
         verbose_name='Роль'
     )
     bio = models.TextField(
@@ -35,31 +43,15 @@ class User(AbstractUser):
 
     @property
     def is_user(self):
-        return self.role == 'user'
+        return self.role == USER
 
     @property
     def is_moderator(self):
-        return self.role == 'moderator'
+        return self.role == MODERATOR
 
     @property
     def is_admin(self):
-        return self.role == 'admin'
-
-
-class Score(models.Model):
-    value = models.SmallIntegerField(validators=[
-        MinValueValidator(0),
-        MaxValueValidator(10)
-    ],
-        default=0)
-    author = models.ForeignKey(User, on_delete=models.CASCADE,
-                               related_name='scores')
-    title = models.ForeignKey('Title', on_delete=models.CASCADE,
-                              related_name='scores')
-    voted_on = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        unique_together = ('author', 'title')
+        return self.role == ADMIN
 
 
 class Review(models.Model):
@@ -70,8 +62,21 @@ class Review(models.Model):
     text = models.TextField()
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True)
-    score = models.ForeignKey(Score, on_delete=models.CASCADE,
-                              related_name='reviews')
+    score = models.SmallIntegerField(
+        verbose_name="Оценка",
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+    )
+
+    class Meta:
+        ordering = ["-pub_date"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["author", "title"], name="unique_review"
+            )
+        ]
+
+    def __str__(self):
+        return self.text[:15]
 
 
 class Comment(models.Model):
@@ -86,7 +91,9 @@ class Comment(models.Model):
 
 class Genre(models.Model):
     name = models.CharField(max_length=100)
-    slug = models.SlugField(unique=True, max_length=50)
+    slug = models.SlugField(
+        unique=True, max_length=50, validators=[ALPHANUMERIC],
+    )
 
     def __str__(self) -> str:
         return self.slug
@@ -94,42 +101,32 @@ class Genre(models.Model):
 
 class Category(models.Model):
     name = models.CharField(max_length=256)
-    slug = models.SlugField(unique=True, max_length=50)
+    slug = models.SlugField(
+        unique=True, max_length=50, validators=[ALPHANUMERIC],
+    )
 
     def __str__(self) -> str:
         return self.slug
 
 
 class TitleGenre(models.Model):
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
     title = models.ForeignKey(
         'Title', on_delete=models.CASCADE, related_name='titles'
     )
-    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
 
     def __str__(self):
         return f'{self.title} {self.genre}'
 
 
-class TitleCategory(models.Model):
-    title = models.ForeignKey('Title', on_delete=models.CASCADE)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return f'{self.title} {self.category}'
-
-
 class Title(models.Model):
     name = models.TextField(max_length=64, blank=False)
-    year = models.IntegerField("Год выпуска")
-    # rating = models.ForeignKey()
-    description = models.CharField(max_length=256)
-    rating = models.IntegerField(
-        validators=[
-            MinValueValidator(0),
-            MaxValueValidator(10)
-        ],
-        default=5
+    year = models.IntegerField(
+        "Год выпуска",
+        validators=[MinValueValidator(0),
+                    MaxValueValidator(datetime.now().year)]
     )
+    description = models.CharField(max_length=256)
     genre = models.ManyToManyField(
         Genre, through=TitleGenre, related_name='genre'
     )

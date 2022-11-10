@@ -1,12 +1,13 @@
 import django_filters
-
 from reviews.models import Genre, Title
 
 
 class GenreFilter(django_filters.FilterSet):
-    make = django_filters.ModelChoiceFilter(field_name='Genre__slug',
-                                            to_field_name='slug',
-                                            queryset=Title.objects.all())
+    make = django_filters.ModelChoiceFilter(
+        field_name='Genre__slug',
+        to_field_name='slug',
+        queryset=Title.objects.all()
+    )
 
     class Meta:
         model = Genre

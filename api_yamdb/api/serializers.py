@@ -1,7 +1,6 @@
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
-from reviews.models import Category, Genre, Title, TitleGenre
-from reviews.models import User, Review, Comment
+from reviews.models import (Category, Genre, Title,
+                            User, Review, Comment)
 from django.shortcuts import get_object_or_404
 
 
@@ -13,30 +12,26 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'username', 'email', 'role', 'bio', 'first_name', 'last_name',
+            'username', 'email', 'role', 'bio', 'first_name', 'last_name'
         )
 
     def validate_username(self, value):
         if value == 'me':
-            raise serializers.ValidationError(
-                'Имя «me» нельзя использовать.'
-            )
+            raise serializers.ValidationError('Имя «me» нельзя использовать.')
         return value
 
 
-class AdminSerializer(serializers.ModelSerializer):
+class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
         fields = (
-            'username', 'email', 'role', 'bio', 'first_name', 'last_name',
+            'username', 'email', 'role', 'bio', 'first_name', 'last_name'
         )
 
     def validate_username(self, value):
         if value == 'me':
-            raise serializers.ValidationError(
-                'Имя «me» нельзя использовать.'
-            )
+            raise serializers.ValidationError('Имя «me» нельзя использовать.')
         return value
 
 
@@ -44,13 +39,11 @@ class SignupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'email',)
+        fields = ('username', 'email')
 
     def validate_username(self, value):
         if value == 'me':
-            raise serializers.ValidationError(
-                'Имя «me» нельзя использовать.'
-            )
+            raise serializers.ValidationError('Имя «me» нельзя использовать.')
         return value
 
 
@@ -66,61 +59,56 @@ class TokenSerializer(serializers.Serializer):
 class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = ('name', 'slug',)
+        fields = ('name', 'slug')
         model = Genre
 
 
 class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = ('name', 'slug',)
+        fields = ('name', 'slug')
         model = Category
 
 
 class GetTitleSerializer(serializers.ModelSerializer):
-    genre = GenreSerializer(many=True, required=False)
-    category = CategorySerializer(many=False, required=False)
+    category = serializers.SlugRelatedField(
+        queryset=Category.objects.all(),
+        slug_field='slug'
+    )
+    genre = serializers.SlugRelatedField(
+        queryset=Genre.objects.all(),
+        slug_field='slug',
+        many=True
+    )
+    rating = serializers.IntegerField(required=False, read_only=True)
 
     class Meta:
-        fields = ('id', 'name', 'year', 'genre', 'category', 'description')
+        fields = (
+            'id', 'name', 'year', 'genre', 'category', 'description', 'rating',
+        )
         model = Title
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    genre = GenreSerializer(many=True, required=False)
+    genre = GenreSerializer(many=True, read_only=False)
     category = CategorySerializer(many=False, required=False)
+    rating = serializers.IntegerField(required=False, read_only=True)
+    # def to_representation(self, instance):
+    #     response = super().to_representation(instance)
+    #     #response['category'] = (
+    # CategorySerializer(instance.category).data['slug'])
+    #     genres = []
+    #     for i in response['genre']:
+    #         x = i['slug']
+    #         genres.append(x)
+    #     response['genre'] = genres
+    #     return response
 
     class Meta:
-        fields = ('id', 'name', 'year', 'genre', 'category', 'description')
+        fields = (
+            'id', 'name', 'year', 'genre', 'category', 'description', 'rating',
+        )
         model = Title
-
-    def create(self, validated_data):
-        self.initial_data._mutable = True
-        genres = self.initial_data.pop('genre')
-        cats = self.initial_data.pop('category')[0]
-        self.initial_data._mutable = False
-        title = Title.objects.create(**validated_data)
-        for genre in genres:
-            current_genre = Genre.objects.get_or_create(slug=genre)[0]
-            TitleGenre.objects.create(
-                genre=current_genre, title=title)
-        current_category = Category.objects.get_or_create(slug=cats)[0]
-        title.category = current_category
-        title.save()
-        return title
-
-    def update(self, instance, validated_data):
-        self.initial_data._mutable = True
-        if 'name' in self.initial_data:
-            name = self.initial_data.pop('name')[0]
-            self.instance.name = name
-        if 'category' in self.initial_data:
-            cats = self.initial_data.pop('category')[0]
-            current_category = Category.objects.get_or_create(slug=cats)[0]
-            self.instance.category = current_category
-        self.initial_data._mutable = False
-        self.instance.save()
-        return self.instance
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -129,14 +117,9 @@ class ReviewSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ('author', 'title', 'text', 'pub_date', 'score')
+        fields = ('id', 'score', 'text', 'author', 'pub_date')
         model = Review
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Review.objects.all(),
-                fields=('author', 'title')
-            )
-        ]
+        read_only_fields = ('title',)
 
     def validate_score(self, value):
         if not (0 < value <= 10):
@@ -146,7 +129,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
-        title_id = self.kwargs.get('title_id')
+        title_id = self.context['view'].kwargs.get('title_id')
         author = self.context.get('request').user
         title = get_object_or_404(Title, pk=title_id)
         if (title.reviews.filter(author=author).exists()
@@ -163,5 +146,6 @@ class CommentSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ('author', 'review', 'text', 'pub_date')
+        fields = ('id', 'author', 'review', 'text', 'pub_date')
         model = Comment
+        read_only_fields = ('review',)
