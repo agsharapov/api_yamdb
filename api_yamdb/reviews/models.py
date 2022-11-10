@@ -12,6 +12,8 @@ USER_ROLE_CHOICES = [
     ('admin', ADMIN)
 ]
 
+REVIEW_TEXT_LENGTH = 15
+
 
 class User(AbstractUser):
     email = models.EmailField(
@@ -71,7 +73,7 @@ class Review(models.Model):
         ]
 
     def __str__(self):
-        return self.text[:15]
+        return self.text[:REVIEW_TEXT_LENGTH]
 
 
 class Comment(models.Model):

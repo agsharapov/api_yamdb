@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from reviews.models import (Category, Genre, Title, TitleGenre,
                             User, Review, Comment)
-from django.shortcuts import get_object_or_404
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -46,8 +45,15 @@ class SignupSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Имя «me» нельзя использовать.')
         return value
 
+    def validate_email(self, value):
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError(
+                'Этот email уже использовался для регистрации.'
+            )
+        return value
 
-class TokenSerializer(serializers.Serializer):
+
+class ConfirmationCodeSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
     confirmation_code = serializers.CharField(required=True)
 
@@ -149,9 +155,8 @@ class ReviewSerializer(serializers.ModelSerializer):
     def validate(self, data):
         title_id = self.context['view'].kwargs.get('title_id')
         author = self.context.get('request').user
-        title = get_object_or_404(Title, pk=title_id)
-        if (title.reviews.filter(author=author).exists()
-           and self.context.get('request').method != 'PATCH'):
+        if (Review.objects.filter(author=author, title=title_id).exists()
+           and self.context.get('request').method == 'POST'):
             raise serializers.ValidationError(
                 'На одно произведение можно оставлять только один отзыв!'
             )
