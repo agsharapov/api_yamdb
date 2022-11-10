@@ -1,6 +1,5 @@
 from rest_framework import permissions
 
-
 OBSERVER_METHODS = ['GET']
 
 
@@ -27,6 +26,7 @@ class ReadOnly(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return request.method in OBSERVER_METHODS
+
 
 
 class AuthorOrModeratorOrAdminOrReadOnly(permissions.BasePermission):

@@ -4,6 +4,7 @@ from reviews.models import (Category, Genre, Title,
 from django.shortcuts import get_object_or_404
 
 
+
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(required=True)
     email = serializers.CharField(required=True)
@@ -46,8 +47,15 @@ class SignupSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Имя «me» нельзя использовать.')
         return value
 
+    def validate_email(self, value):
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError(
+                'Этот email уже использовался для регистрации.'
+            )
+        return value
 
-class TokenSerializer(serializers.Serializer):
+
+class ConfirmationCodeSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
     confirmation_code = serializers.CharField(required=True)
 
@@ -93,16 +101,6 @@ class TitleSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(many=True, read_only=False)
     category = CategorySerializer(many=False, required=False)
     rating = serializers.IntegerField(required=False, read_only=True)
-    # def to_representation(self, instance):
-    #     response = super().to_representation(instance)
-    #     #response['category'] = (
-    # CategorySerializer(instance.category).data['slug'])
-    #     genres = []
-    #     for i in response['genre']:
-    #         x = i['slug']
-    #         genres.append(x)
-    #     response['genre'] = genres
-    #     return response
 
     class Meta:
         fields = (
@@ -131,9 +129,8 @@ class ReviewSerializer(serializers.ModelSerializer):
     def validate(self, data):
         title_id = self.context['view'].kwargs.get('title_id')
         author = self.context.get('request').user
-        title = get_object_or_404(Title, pk=title_id)
-        if (title.reviews.filter(author=author).exists()
-           and self.context.get('request').method != 'PATCH'):
+        if (Review.objects.filter(author=author, title=title_id).exists()
+           and self.context.get('request').method == 'POST'):
             raise serializers.ValidationError(
                 'На одно произведение можно оставлять только один отзыв!'
             )

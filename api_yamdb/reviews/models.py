@@ -5,6 +5,7 @@ from django.core.validators import RegexValidator
 from datetime import datetime
 
 
+
 USER = 'user'
 MODERATOR = 'moderator'
 ADMIN = 'admin'
@@ -13,9 +14,12 @@ USER_ROLE_CHOICES = [
     ('moderator', MODERATOR),
     ('admin', ADMIN)
 ]
+
 ALPHANUMERIC = RegexValidator(
     r'^[0-9a-zA-Z]*$', 'Допустимы только буквы или цифры.'
 )
+REVIEW_TEXT_LENGTH = 15
+
 
 
 class User(AbstractUser):
@@ -76,7 +80,7 @@ class Review(models.Model):
         ]
 
     def __str__(self):
-        return self.text[:15]
+        return self.text[:REVIEW_TEXT_LENGTH]
 
 
 class Comment(models.Model):
@@ -121,6 +125,7 @@ class TitleGenre(models.Model):
 
 class Title(models.Model):
     name = models.TextField(max_length=64, blank=False)
+
     year = models.IntegerField(
         "Год выпуска",
         validators=[MinValueValidator(0),

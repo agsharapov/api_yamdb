@@ -13,10 +13,10 @@ from django.db.models import Avg
 
 from reviews.models import (Category, Genre, Title,
                             User, Review)
-from .serializers import (CategorySerializer, GenreSerializer, TitleSerializer,
-                          ReviewSerializer, CommentSerializer, UserSerializer,
-                          ProfileSerializer, SignupSerializer, TokenSerializer,
-                          GetTitleSerializer)
+from .serializers import (CategorySerializer, GenreSerializer, UserSerializer,
+                          ReviewSerializer, SignupSerializer, TitleSerializer,
+                          ProfileSerializer, CommentSerializer,
+                          ConfirmationCodeSerializer, GetTitleSerializer)
 from .filters import TitleFilter
 from .permissions import Admin, ReadOnly, AuthorOrModeratorOrAdminOrReadOnly
 
@@ -154,17 +154,18 @@ def send_confirmation_code(user):
 @permission_classes([AllowAny])
 def signup(request):
     serializer = SignupSerializer(data=request.data)
-    if serializer.is_valid():
-        user = serializer.save()
-        send_confirmation_code(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    serializer.is_valid(raise_exception=True)
+    user, created = User.objects.get_or_create(
+        email=serializer.validated_data['email'],
+        username=serializer.validated_data['username'])
+    send_confirmation_code(user)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def get_token(request):
-    serializer = TokenSerializer(data=request.data)
+    serializer = ConfirmationCodeSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

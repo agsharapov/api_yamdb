@@ -3,7 +3,6 @@ from rest_framework.routers import DefaultRouter
 from api.views import (TitleViewSet, GenreViewSet, CategoryViewSet,
                        ReviewViewSet, CommentViewSet, UserViewSet,
                        signup, get_token)
-from rest_framework_simplejwt.views import TokenObtainPairView
 
 
 v1_router = DefaultRouter()
@@ -30,5 +29,4 @@ auth = [
 urlpatterns = [
     path('', include(v1_router.urls), name='api'),
     path('', include(auth)),
-    path('123/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
 ]
