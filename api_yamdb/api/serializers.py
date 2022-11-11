@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from reviews.models import (Category, Genre, Title,
                             User, Review, Comment)
-from django.shortcuts import get_object_or_404
 
 
 class UserSerializer(serializers.ModelSerializer):
