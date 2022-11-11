@@ -28,7 +28,6 @@ class ReadOnly(permissions.BasePermission):
         return request.method in OBSERVER_METHODS
 
 
-
 class AuthorOrModeratorOrAdminOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
         return (request.method in permissions.SAFE_METHODS
