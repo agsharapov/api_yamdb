@@ -1,13 +1,23 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import RegexValidator
+from datetime import datetime
 
 
-USER_ROLE_CHOICES = (
-    ('user', 'Аутентифицированный пользователь'),
-    ('moderator', 'Модератор'),
-    ('admin', 'Администратор'),
+USER = 'user'
+MODERATOR = 'moderator'
+ADMIN = 'admin'
+USER_ROLE_CHOICES = [
+    ('user', USER),
+    ('moderator', MODERATOR),
+    ('admin', ADMIN)
+]
+
+ALPHANUMERIC = RegexValidator(
+    r'^[0-9a-zA-Z]*$', 'Допустимы только буквы или цифры.'
 )
+REVIEW_TEXT_LENGTH = 15
 
 
 class User(AbstractUser):
@@ -18,7 +28,7 @@ class User(AbstractUser):
     role = models.CharField(
         max_length=255,
         choices=USER_ROLE_CHOICES,
-        default='user',
+        default=USER,
         verbose_name='Роль'
     )
     bio = models.TextField(
@@ -35,15 +45,15 @@ class User(AbstractUser):
 
     @property
     def is_user(self):
-        return self.role == 'user'
+        return self.role == USER
 
     @property
     def is_moderator(self):
-        return self.role == 'moderator'
+        return self.role == MODERATOR
 
     @property
     def is_admin(self):
-        return self.role == 'admin'
+        return self.role == ADMIN
 
 
 class Review(models.Model):
@@ -68,7 +78,7 @@ class Review(models.Model):
         ]
 
     def __str__(self):
-        return self.text[:15]
+        return self.text[:REVIEW_TEXT_LENGTH]
 
 
 class Comment(models.Model):
@@ -83,7 +93,9 @@ class Comment(models.Model):
 
 class Genre(models.Model):
     name = models.CharField(max_length=100)
-    slug = models.SlugField(unique=True, max_length=50)
+    slug = models.SlugField(
+        unique=True, max_length=50, validators=[ALPHANUMERIC],
+    )
 
     def __str__(self) -> str:
         return self.slug
@@ -91,7 +103,9 @@ class Genre(models.Model):
 
 class Category(models.Model):
     name = models.CharField(max_length=256)
-    slug = models.SlugField(unique=True, max_length=50)
+    slug = models.SlugField(
+        unique=True, max_length=50, validators=[ALPHANUMERIC],
+    )
 
     def __str__(self) -> str:
         return self.slug
@@ -109,16 +123,13 @@ class TitleGenre(models.Model):
 
 class Title(models.Model):
     name = models.TextField(max_length=64, blank=False)
-    year = models.IntegerField("Год выпуска")
-    description = models.CharField(max_length=256)
-    rating = models.IntegerField(
-        validators=[
-            MinValueValidator(0),
-            MaxValueValidator(10)
-        ],
-        null=True,
-        blank=True,
+
+    year = models.IntegerField(
+        "Год выпуска",
+        validators=[MinValueValidator(0),
+                    MaxValueValidator(datetime.now().year)]
     )
+    description = models.CharField(max_length=256)
     genre = models.ManyToManyField(
         Genre, through=TitleGenre, related_name='genre'
     )

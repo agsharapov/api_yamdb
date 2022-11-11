@@ -1,4 +1,4 @@
-from rest_framework import viewsets, filters, status, mixins
+from rest_framework import viewsets, filters, status
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -9,52 +9,40 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.db.models import Avg
 
 from reviews.models import (Category, Genre, Title,
                             User, Review)
-from .serializers import (CategorySerializer, GenreSerializer, TitleSerializer,
-                          ReviewSerializer, CommentSerializer, UserSerializer,
-                          ProfileSerializer, SignupSerializer, TokenSerializer)
+from .serializers import (CategorySerializer, GenreSerializer, UserSerializer,
+                          ReviewSerializer, SignupSerializer, TitleSerializer,
+                          ProfileSerializer, CommentSerializer,
+                          ConfirmationCodeSerializer, GetTitleSerializer)
 from .filters import TitleFilter
 from .permissions import Admin, ReadOnly, AuthorOrModeratorOrAdminOrReadOnly
+from .viewsets import CustomViewSet
 
 
 ADMIN_EMAIL = 'robot@yamdb-team.ru'
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all().select_related('category')
-    serializer_class = TitleSerializer
+    queryset = (Title.objects.all()
+                .select_related('category')
+                .annotate(rating=Avg('reviews__score')))
     pagination_class = LimitOffsetPagination
-    permission_classes = (Admin,)
+    permission_classes = [Admin | ReadOnly]
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     filterset_fields = ('genre', 'genre__slug', 'category__slug')
     search_fields = ('genre', 'genre__slug', 'category__slug',)
     filterset_class = TitleFilter
 
-    # def get_queryset(self):
-    #     if 'genre' in self.request.query_params:
-    #         gen = self.request.query_params.get('genre')
-    #         qs = Title.objects.all().prefetch_related(
-    #             Prefetch('genre', queryset=Genre.objects.filter(slug=gen))
-    #         )
-    #     qs = Title.objects.all().select_related('category')
-    #     return qs
-
-    def get_permissions(self):
-        if self.action == 'retrieve':
-            return (ReadOnly(),)
-        elif self.action == 'list':
-            return (ReadOnly(),)
-        return super().get_permissions()
+    def get_serializer_class(self):
+        if self.action == 'list' or self.action == 'retrieve':
+            return TitleSerializer
+        return GetTitleSerializer
 
 
-class GenreViewSet(
-    mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet
-):
+class GenreViewSet(CustomViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = (Admin,)
@@ -72,12 +60,7 @@ class GenreViewSet(
         return super().get_permissions()
 
 
-class CategoryViewSet(
-    mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet
-):
+class CategoryViewSet(CustomViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (Admin,)
@@ -172,17 +155,18 @@ def send_confirmation_code(user):
 @permission_classes([AllowAny])
 def signup(request):
     serializer = SignupSerializer(data=request.data)
-    if serializer.is_valid():
-        user = serializer.save()
-        send_confirmation_code(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    serializer.is_valid(raise_exception=True)
+    user, created = User.objects.get_or_create(
+        email=serializer.validated_data['email'],
+        username=serializer.validated_data['username'])
+    send_confirmation_code(user)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def get_token(request):
-    serializer = TokenSerializer(data=request.data)
+    serializer = ConfirmationCodeSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
